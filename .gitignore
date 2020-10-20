@@ -15,8 +15,6 @@ target/
 *.ipr
 *.iml
 *.iws
-data/
-logs/
 
 # temp ignore
 *.log
