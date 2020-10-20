@@ -180,7 +180,7 @@ http://localhost:8888
 
 ### 注意事项
 
-**以日志形式增量同步MySQL数据到Oracle数据时，需要开启MySQL的binlog日志。**
+**以日志形式增量同步MySQL数据到Oracle数据库时，需要开启MySQL的binlog日志。**
 
 
 # 扫一扫关注微信公众号
