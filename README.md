@@ -97,6 +97,7 @@ http://localhost:8888
 **配置字段映射关系与“配置Oracle数据全量同步到MySQL8”的步骤相同。**
 
 **配置后的效果**
+
 ![](https://img-blog.csdnimg.cn/20201020212224269.jpg)
 
 
@@ -155,6 +156,7 @@ http://localhost:8888
 **配置字段映射关系与“配置Oracle数据全量同步到MySQL8”的步骤相同。**
 
 **配置后的效果**
+
 ![](https://img-blog.csdnimg.cn/20201020212803940.jpg)
 
 
