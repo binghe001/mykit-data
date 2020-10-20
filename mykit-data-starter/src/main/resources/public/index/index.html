@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+
+<!-- Connector Mapping -->
+<div class="container-fluid">
+    <div class="row">
+        <form class="form-horizontal" role="form" method="post">
+
+            <!-- 连接器管理 -->
+            <div class="col-md-12">
+                <!-- 连接器开始位置 -->
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-primary" id="indexAddConnectorBtn">
+                            <span class="fa fa-plus"></span>添加连接([[${connectors?.size()} ?: 0]])
+                        </button>
+                    </div>
+                </div>
+                <!-- 显示连接器列表 -->
+                <div class="row" th:if="${connectors?.size() gt 0}">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <!-- 连接器 -->
+                            <div class="panel-body text-center">
+                                <div class="row connectorList">
+                                    <!-- 连接器__开始 -->
+                                    <div class="col-md-1" th:each="c,state : ${connectors}">
+                                        <div th:id="${c?.id}" class="jumbotron dbsyncer_block">
+                                            <div class="row">
+                                                <img th:src="@{'/img/'+ ${c?.config?.connectorType} + '.png'}">
+                                            </div>
+                                            <div class="row dbsyncer_over_hidden">
+                                                <span th:text="${c?.name}" th:title="${c?.name}"/>
+                                            </div>
+                                        </div>
+                                        <!-- 删除操作 -->
+                                        <div class="dropdown">
+                                            <a data-toggle="dropdown" href="javascript:;"><span
+                                                    class="well-sign-operation"><i class="fa fa-gears fa-1x"></i></span></a>
+                                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                                <li th:url="'/connector/remove?id='+${c?.id}"><a href="javascript:;"><i
+                                                        class="fa fa-trash well-sign-red"></i>&nbsp;&nbsp;删除</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <!-- 连接器__结束 -->
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- 连接器开结束位置 -->
+            </div>
+
+            <!-- 驱动管理 -->
+            <div class="col-md-12">
+                <!-- 驱动开始位置 -->
+                <div class="form-group" th:if="${connectors?.size() gt 0}">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-primary" id="indexAddMappingBtn">
+                            <span class="fa fa-plus"></span>添加驱动([[${mappings?.size()} ?: 0]])
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 显示驱动列表 -->
+                <div class="row" th:if="${mappings?.size() gt 0}">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="row mappingList">
+                                    <!-- 驱动__开始 -->
+                                    <div class="col-md-4" th:each="m,state : ${mappings}">
+                                        <div th:id="${m?.id}" class="jumbotron dbsyncer_block">
+                                            <!--驱动标题信息 -->
+                                            <div class="row text-center" th:text="${m?.name}"
+                                                 th:title="${m?.name}"></div>
+
+                                            <div class="row">
+                                                <!--左边驱动信息 -->
+                                                <div class="col-md-5">
+                                                    <div class="well well-lg">
+                                                        <div class="col-md-4">
+                                                            <img th:src="@{'/img/'+ ${m?.sourceConnector?.config?.connectorType} + '.png'}">
+                                                        </div>
+                                                        <div class="col-md-7 dbsyncer_over_hidden">
+                                                            <span th:text="${m?.sourceConnector?.name}"
+                                                                  th:title="${m?.sourceConnector?.name}"></span>
+                                                        </div>
+                                                        <div class="col-md-1"></div>
+                                                    </div>
+                                                    <span th:if="${m?.sourceConnector?.running}" th:title="连接器正常"
+                                                          class="well-sign-left"><i
+                                                            class="fa fa-2x fa-circle well-sign-green"></i></span>
+                                                    <span th:unless="${m?.sourceConnector?.running}" th:title="连接器异常"
+                                                          class="well-sign-left"><i
+                                                            class="fa fa-2x fa-times-circle-o well-sign-red"></i></span>
+                                                </div>
+
+                                                <!--中间图标 -->
+                                                <div class="col-md-2">
+                                                    <div class="line">
+                                                        <span th:if="${m?.meta?.state eq 1}"
+                                                              class="running-through-rate well-sign-green">✔</span>
+                                                        <span th:if="${m?.meta?.state eq 0}"
+                                                              class="running-state label label-info">未运行</span>
+                                                        <span th:if="${m?.meta?.state eq 1}"
+                                                              class="running-state label label-success">运行中</span>
+                                                        <span th:if="${m?.meta?.state eq 2}"
+                                                              class="running-state label label-warning">停止中</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- 右边驱动信息 -->
+                                                <div class="col-md-5">
+                                                    <div class="well well-lg">
+                                                        <div class="col-md-4">
+                                                            <img th:src="@{'/img/'+ ${m?.targetConnector?.config?.connectorType} + '.png'}">
+                                                        </div>
+                                                        <div class="col-md-7 dbsyncer_over_hidden">
+                                                            <span th:text="${m?.targetConnector?.name}"
+                                                                  th:title="${m?.targetConnector?.name}"></span>
+                                                        </div>
+                                                        <div class="col-md-1"></div>
+                                                        <span th:if="${m?.targetConnector?.running}" th:title="连接器正常"
+                                                              class="well-sign-right"><i
+                                                                class="fa fa-2x fa-circle well-sign-green"></i></span>
+                                                        <span th:unless="${m?.targetConnector?.running}"
+                                                              th:title="连接器异常" class="well-sign-right"><i
+                                                                class="fa fa-2x fa-times-circle-o well-sign-red"></i></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <table class="table table-hover">
+                                                    <tbody>
+                                                    <tr>
+                                                        <td>同步方式> <span th:text="${m?.meta?.model}"></span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left">
+                                                            同步结果>
+                                                            <span th:if="${m?.meta?.model eq '全量'}">
+                                                                总数:[[${m?.meta?.total}]]
+                                                                <span th:if="${m?.meta?.total gt 0 and (m?.meta?.success + m?.meta?.fail) gt 0}">
+                                                                ,进度:[[${#numbers.formatDecimal(((m?.meta?.success + m?.meta?.fail) / m?.meta?.total * 100.00),0 ,2)}]]%
+                                                                </span>
+                                                                ,耗时:[[${(m?.meta?.endTime - m?.meta?.beginTime) / 1000}]]秒
+                                                            </span>
+                                                            <span th:if="${m?.meta?.model eq '增量'}">
+                                                                总数:[[${#numbers.formatDecimal((m?.meta?.success + m?.meta?.fail),0 ,0)}]]
+                                                            </span>
+
+                                                            <span th:if="${m?.meta?.success gt 0}">,成功:[[${m?.meta?.success}]]</span>
+                                                            <span th:if="${m?.meta?.fail gt 0}">,失败:[[${m?.meta?.fail}]] <a
+                                                                    th:id="${m?.meta?.id}" href="javascript:;"
+                                                                    class="label label-danger queryData">日志</a></span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-left">
+                                                            启动时间>
+                                                            <span th:if="${m?.meta?.beginTime gt 0}">[[${#dates.format(m?.meta?.beginTime, 'yyyy-MM-dd HH:mm:ss')}]]</span>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="row text-right text-muted"
+                                                 th:text="${#dates.format(m?.updateTime, 'yyyy-MM-dd HH:mm:ss')}"></div>
+                                        </div>
+
+                                        <!-- 右上角下拉菜单 -->
+                                        <div class="dropdown">
+                                            <a data-toggle="dropdown" href="javascript:;"><span
+                                                    class="well-sign-operation"><i class="fa fa-gears fa-2x"></i></span></a>
+                                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                                <!-- 未运行 -->
+                                                <li th:if="${m?.meta?.state ne 1}"
+                                                    th:url="'/mapping/start?id='+${m?.id}"><a href="javascript:;"><i
+                                                        class="fa fa-check-circle-o well-sign-green"></i>&nbsp;&nbsp;启动</a>
+                                                </li>
+                                                <!-- 运行中 -->
+                                                <li th:if="${m?.meta?.state eq 1}"
+                                                    th:url="'/mapping/stop?id='+${m?.id}"><a href="javascript:;"><i
+                                                        class="fa fa-times-circle-o well-sign-red"></i>&nbsp;&nbsp;停止</a>
+                                                </li>
+                                                <!-- 未运行 -->
+                                                <li th:if="${m?.meta?.state ne 1}"
+                                                    th:url="'/mapping/remove?id='+${m?.id}" confirm="true"
+                                                    confirmMessage="确认删除?"><a href="javascript:;"><i
+                                                        class="fa fa-trash well-sign-red"></i>&nbsp;&nbsp;删除</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <!-- 驱动__结束 -->
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 驱动结束位置 -->
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/index/index.js}"></script>
+</html>
