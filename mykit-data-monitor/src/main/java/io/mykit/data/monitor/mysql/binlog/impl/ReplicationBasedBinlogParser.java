@@ -116,6 +116,11 @@ public class ReplicationBasedBinlogParser extends AbstractBinlogParser {
                 if (parser == null)
                     parser = this.defaultParser;
                 parser.parse(es, header, context);
+
+                //解决解析MySQL8 binlog字节位错位的问题
+                while (es.available() != 0){
+                    es.read();
+                }
             }
 
             if (isFormatDescriptionEvent)

@@ -96,7 +96,7 @@ public final class FormatDescriptionEvent extends AbstractBinlogEventV4 {
 
     public boolean checksumPossible() {
         Integer[] version = splitServerVersion();
-        if (version[0] >= 5 && version[1] >= 6 && version[2] >= 1) {
+        if ((version[0] >= 5 && version[1] >= 6 && version[2] >= 1) || (version[0] >= 8)) {
             return true;
         } else {
             return false;
