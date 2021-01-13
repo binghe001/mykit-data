@@ -113,6 +113,8 @@ public class BinlogRemoteClient {
         // 4、检查连接数据库的基本信息
         final Query query = new Query(this.transport);
         setupFilenameAndPosition(query);
+        //防止第一次设置binlog文件名称时，this.binlogFileName为空导致的Bug
+        this.binlogParser.setBinlogFileName(this.binlogFileName);
         setupChecksumState(query);
         setupHeartbeatPeriod(query);
         setupSlaveUUID(query);
