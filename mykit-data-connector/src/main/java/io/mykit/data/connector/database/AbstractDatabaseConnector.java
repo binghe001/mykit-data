@@ -19,6 +19,7 @@ import io.mykit.data.common.model.Result;
 import io.mykit.data.common.utils.CollectionUtils;
 import io.mykit.data.connector.config.*;
 import io.mykit.data.connector.constants.ConnectorConstants;
+import io.mykit.data.connector.enums.ConnectorEnum;
 import io.mykit.data.connector.enums.OperationEnum;
 import io.mykit.data.connector.enums.SetterEnum;
 import io.mykit.data.connector.enums.SqlBuilderEnum;
@@ -90,6 +91,7 @@ public abstract class AbstractDatabaseConnector implements Database{
             jdbcTemplate = getJdbcTemplate(cfg);
             String quotation = buildSqlWithQuotation();
             String metaSql = new StringBuilder().append("select * from ").append(quotation).append(tableName).append(quotation).toString();
+            metaSql = this.getMetaSql(metaSql, cfg.getConnectorType());
             metaInfo = DatabaseUtils.getMetaInfo(jdbcTemplate, metaSql, tableName);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -98,6 +100,27 @@ public abstract class AbstractDatabaseConnector implements Database{
             this.close(jdbcTemplate);
         }
         return metaInfo;
+    }
+
+
+    /**
+     *  优化metaSql的查询，使其只查询一条数据
+     */
+    private String getMetaSql(String metaSql, String connectorType) {
+        if(StringUtils.isEmpty(connectorType)){
+            return metaSql;
+        }
+        if (ConnectorEnum.ORACLE.getType().equals(connectorType)){  //Oracle数据库
+            metaSql = metaSql.concat(" where rownum = 1 ");
+        }else if(ConnectorEnum.MYSQL.getType().equals(connectorType)){  //MySQL数据库
+            metaSql = metaSql.concat(" limit 1 ");
+        }else if(ConnectorEnum.DQL_MYSQL.getType().equals(connectorType)){ //MySQL数据库
+            metaSql = metaSql.concat(" limit 1 ");
+        }else if(ConnectorEnum.DQL_ORACLE.getType().equals(connectorType)){ //Oracle数据库
+            metaSql = metaSql.concat(" where rownum = 1 ");
+        }
+
+        return metaSql;
     }
 
     @Override

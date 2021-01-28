@@ -117,8 +117,8 @@ public class TableGroupChecker extends AbstractChecker {
             List<Field> column = metaInfo.getColumn();
             List<Field> list = new ArrayList<>();
             //TODO 使用ROWID id 映射字段后与源表的id字段冲突，所以修改为 ROWID tableItemId
-            //list.add(new Field("ROWID id", "VARCHAR2",12));
-            list.add(new Field("ROWID tableItemId", "VARCHAR2",12));
+            list.add(new Field("ROWID", "VARCHAR2",12));
+            //list.add(new Field("ROWID tableItemId", "VARCHAR2",12));
             list.addAll(column);
 
             column.clear();
@@ -162,7 +162,8 @@ public class TableGroupChecker extends AbstractChecker {
         if (!CollectionUtils.isEmpty(k1)) {
             List<FieldMapping> fields = new ArrayList<>();
             k1.forEach(k -> fields.add(new FieldMapping(m1.get(k), m2.get(k))));
-            k2.forEach(k -> fields.add(new FieldMapping(m1.get(k), m2.get(k))));
+            //TODO 注释掉去除目标表的字段显示在源表字段列
+            //k2.forEach(k -> fields.add(new FieldMapping(m1.get(k), m2.get(k))));
             tableGroup.setFieldMapping(fields);
         }
     }
