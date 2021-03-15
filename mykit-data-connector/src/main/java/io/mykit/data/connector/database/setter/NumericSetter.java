@@ -28,6 +28,12 @@ import java.sql.SQLException;
 public class NumericSetter extends AbstractSetter {
     @Override
     protected void set(PreparedStatement ps, int i, Object val) throws SQLException {
-        ps.setInt(i, Integer.parseInt(String.valueOf(val)));
+        String value = String.valueOf(val);
+        //目标数据库是Oracle时，Oracle中的NUMBER类型可能会保存小数
+        if(value.contains(".")){
+            ps.setDouble(i, Double.parseDouble(value));
+        }else{
+            ps.setInt(i, Integer.parseInt(value));
+        }
     }
 }
