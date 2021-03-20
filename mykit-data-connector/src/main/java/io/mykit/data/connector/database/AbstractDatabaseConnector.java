@@ -110,13 +110,13 @@ public abstract class AbstractDatabaseConnector implements Database{
         if(StringUtils.isEmpty(connectorType)){
             return metaSql;
         }
-        if (ConnectorEnum.ORACLE.getType().equals(connectorType)){  //Oracle数据库
+        if (ConnectorEnum.ORACLE.getType().equalsIgnoreCase(connectorType)){  //Oracle数据库
             metaSql = metaSql.concat(" where rownum = 1 ");
-        }else if(ConnectorEnum.MYSQL.getType().equals(connectorType)){  //MySQL数据库
+        }else if(ConnectorEnum.MYSQL.getType().equalsIgnoreCase(connectorType)){  //MySQL数据库
             metaSql = metaSql.concat(" limit 1 ");
-        }else if(ConnectorEnum.DQL_MYSQL.getType().equals(connectorType)){ //MySQL数据库
+        }else if(ConnectorEnum.DQL_MYSQL.getType().equalsIgnoreCase(connectorType)){ //MySQL数据库
             metaSql = metaSql.concat(" limit 1 ");
-        }else if(ConnectorEnum.DQL_ORACLE.getType().equals(connectorType)){ //Oracle数据库
+        }else if(ConnectorEnum.DQL_ORACLE.getType().equalsIgnoreCase(connectorType)){ //Oracle数据库
             metaSql = metaSql.concat(" where rownum = 1 ");
         }
 
@@ -432,16 +432,16 @@ public abstract class AbstractDatabaseConnector implements Database{
         StringBuilder condition = new StringBuilder();
 
         // 拼接并且SQL
-        String addSql = getFilterSql(OperationEnum.AND.getName(), filter);
+        String filterSql = getFilterSql(filter);
         // 如果Add条件存在
-        if (StringUtils.isNotBlank(addSql)) {
-            condition.append(addSql);
+        if (StringUtils.isNotBlank(filterSql)) {
+            condition.append(filterSql);
         }
 
         // 拼接或者SQL
         String orSql = getFilterSql(OperationEnum.OR.getName(), filter);
         // 如果Or条件和Add条件都存在
-        if (StringUtils.isNotBlank(orSql) && StringUtils.isNotBlank(addSql)) {
+        if (StringUtils.isNotBlank(orSql) && StringUtils.isNotBlank(filterSql)) {
             condition.append(" OR ").append(orSql);
         }
 
@@ -450,6 +450,33 @@ public abstract class AbstractDatabaseConnector implements Database{
         if (StringUtils.isNotBlank(condition.toString())) {
             // WHERE (USER.USERNAME = 'zhangsan' AND USER.AGE='20') OR (USER.TEL='18299996666')
             sql.insert(0, " WHERE ").append(condition);
+        }
+        return sql.toString();
+    }
+
+
+    /**
+     * 将条件列表转化为条件SQL语句，条件顺序与页面配置的条件顺序一致
+     * @param filter 条件列表
+     * @return 条件SQL语句  aaa = aaa and bbb = bbb or ccc = ccc and ddd = ddd
+     */
+    private String getFilterSql(List<Filter> filter) {
+        if (CollectionUtils.isEmpty(filter)) {
+            return "";
+        }
+
+        int size = filter.size();
+        StringBuilder sql = new StringBuilder();
+        String quotation = buildSqlWithQuotation();
+        Filter currentFilter = filter.get(0);
+        //第一个条件数据不需加连接符
+        sql.append(quotation).append(currentFilter.getName()).append(quotation).append(currentFilter.getFilter()).append("'").append(currentFilter.getValue()).append("' ");
+        //从第二个条件数据开始循环
+        for (int i = 1; i < size; i++) {
+            currentFilter = filter.get(i);
+            sql.append(" ").append(currentFilter.getOperation()).append(" ");
+            // "USER" = 'zhangsan'
+            sql.append(quotation).append(currentFilter.getName()).append(quotation).append(currentFilter.getFilter()).append("'").append(currentFilter.getValue()).append("'");
         }
         return sql.toString();
     }

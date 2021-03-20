@@ -41,8 +41,9 @@ public class FieldPicker {
     private List<Node> index;
     private int indexSize;
     private boolean filterSwitch;
-    private List<Filter> add;
-    private List<Filter> or;
+//    private List<Filter> add;
+//    private List<Filter> or;
+    private List<Filter> commonFilter;
 
     public FieldPicker(TableGroup tableGroup) {
         this.tableGroup = tableGroup;
@@ -81,24 +82,28 @@ public class FieldPicker {
             return true;
         }
         final Map<String, Object> row = data.getData();
-        // where (id > 1 and id < 100) or (id = 100 or id =101)
-        // 或 关系(成立任意条件)
-        CompareFilter filter = null;
-        Object value = null;
-        for (Filter f : or) {
-            value = row.get(f.getName());
-            if (null == value) {
-                continue;
-            }
-            filter = FilterEnum.getCompareFilter(f.getFilter());
-            if (filter.compare(String.valueOf(value), f.getValue())) {
+
+        //存储以每个or条件分隔的过滤条件
+        Map<Integer, List<Filter>> filterMap = this.getFilterMap(commonFilter);
+        return passFilter(filterMap, row);
+    }
+
+    private boolean passFilter(Map<Integer, List<Filter>> filterMap, Map<String, Object> row) {
+        Collection<List<Filter>> values = filterMap.values();
+        for(List<Filter> filters : values) {
+            //通过
+            if(this.passFilter(filters, row)) {
                 return true;
             }
         }
+        return false;
+    }
 
+    private boolean passFilter(List<Filter> filters, Map<String, Object> row) {
         boolean pass = false;
-        // 并 关系(成立所有条件)
-        for (Filter f : add) {
+        Object value = null;
+        CompareFilter filter = null;
+        for (Filter f : filters) {
             value = row.get(f.getName());
             if (null == value) {
                 continue;
@@ -109,18 +114,38 @@ public class FieldPicker {
             }
             pass = true;
         }
-
         return pass;
+    }
+
+    /**
+     * 将条件list转换为以or分隔的条件
+     */
+    private Map<Integer, List<Filter>> getFilterMap(List<Filter> filterList){
+        Map<Integer, List<Filter>> filterMap = new HashMap<>();
+        Integer index = 0;
+        for(Filter filter : filterList) {
+            if(StringUtils.equals(filter.getOperation(), OperationEnum.AND.getName())) {  //and条件
+                List<Filter> filters = filterMap.get(index);
+                if(filters == null) {
+                    filters = new ArrayList<>();
+                }
+                filters.add(filter);
+                filterMap.put(index, filters);
+            }else {   //or条件
+                List<Filter> filters = new ArrayList<>();
+                filters.add(filter);
+                index ++;
+                filterMap.put(index, filters);
+            }
+        }
+        return filterMap;
     }
 
     private void init(List<Filter> filter, List<Field> column, List<FieldMapping> fieldMapping) {
         // 解析过滤条件
         if ((filterSwitch = !CollectionUtils.isEmpty(filter))) {
-            add = filter.stream().filter(f -> StringUtils.equals(f.getOperation(), OperationEnum.AND.getName())).collect(
-                    Collectors.toList());
-            or = filter.stream().filter(f -> StringUtils.equals(f.getOperation(), OperationEnum.OR.getName())).collect(Collectors.toList());
+            commonFilter = filter.stream().collect(Collectors.toList());
         }
-
         // column  => [1, 86, 0, 中文, 2020-05-15T12:17:22.000+0800, 备注信息]
         Assert.notEmpty(column, "读取字段不能为空.");
         Assert.notEmpty(fieldMapping, "映射关系不能为空.");
