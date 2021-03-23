@@ -285,7 +285,7 @@ public abstract class AbstractDatabaseConnector implements Database{
         // Update / Delete
         if (StringUtils.equals(ConnectorConstants.OPERTION_UPDATE, event)) {
             // update attrs by id
-            List<Field> pkList = fields.stream().filter(f -> f.isPk()).collect(Collectors.toList());
+            List<Field> pkList = fields.stream().filter((f) -> f != null && f.isPk()).collect(Collectors.toList());
             fields.add(pkList.get(0));
         } else if (StringUtils.equals(ConnectorConstants.OPERTION_DELETE, event)) {
             // delete by id
