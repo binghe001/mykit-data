@@ -163,7 +163,7 @@ public class MysqlExtractor extends AbstractExtractor {
                     addAll(before, p.getBefore().getColumns());
                     addAll(after, p.getAfter().getColumns());
                     changedLogEvent(tableName, ConnectorConstants.OPERTION_UPDATE, before, after);
-                    break;
+                    //break;
                 }
                 return;
             }
@@ -176,7 +176,7 @@ public class MysqlExtractor extends AbstractExtractor {
                     List<Object> after = new ArrayList<>();
                     addAll(after, row.getColumns());
                     changedLogEvent(tableName, ConnectorConstants.OPERTION_INSERT, Collections.EMPTY_LIST, after);
-                    break;
+                    //break;
                 }
                 return;
             }
@@ -189,7 +189,7 @@ public class MysqlExtractor extends AbstractExtractor {
                     List<Object> before = new ArrayList<>();
                     addAll(before, row.getColumns());
                     changedLogEvent(tableName, ConnectorConstants.OPERTION_DELETE, before, Collections.EMPTY_LIST);
-                    break;
+                    //break;
                 }
                 return;
             }
