@@ -34,14 +34,18 @@ public enum SetterEnum {
     BIGINT(Types.BIGINT, new BigintSetter()),
     TIMESTAMP(Types.TIMESTAMP, new TimestampSetter()),
     DATE(Types.DATE, new DateSetter()),
+    TIME(Types.TIME, new TimeSetter()),
 
     // 较少使用
     CHAR(Types.CHAR, new CharSetter()),
     LONGVARCHAR(Types.LONGVARCHAR, new LongVarcharSetter()),
     NUMERIC(Types.NUMERIC, new NumericSetter()),
+    DECIMAL(Types.DECIMAL, new DecimalSetter()),
+    NULL(Types.NULL, new NullSetter()),
 
     // 很少使用
     TINYINT(Types.TINYINT, new TinyintSetter()),
+    SMALLINT(Types.SMALLINT, new SmallintSetter()),
     DOUBLE(Types.DOUBLE, new DoubleSetter()),
     FLOAT(Types.FLOAT, new FloatSetter()),
     REAL(Types.REAL, new RealSetter());
