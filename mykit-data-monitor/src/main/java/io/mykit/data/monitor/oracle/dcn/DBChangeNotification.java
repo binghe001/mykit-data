@@ -3,6 +3,7 @@
  */
 package io.mykit.data.monitor.oracle.dcn;
 
+import io.mykit.data.utils.lock.LockUtils;
 import oracle.jdbc.OracleDriver;
 import oracle.jdbc.OracleStatement;
 import oracle.jdbc.dcn.*;
@@ -213,17 +214,23 @@ public class DBChangeNotification {
             if (event.getCode() != TableChangeDescription.TableOperation.DELETE.getCode()) {
                 ResultSet rs = null;
                 try {
-                    rs = statement.executeQuery(String.format(QUERY_ROW_DATA_SQL, tableName, rowId));
-                    final int size = rs.getMetaData().getColumnCount();
-                    while (rs.next()) {
-                        for (int i = 1; i <= size; i++) {
-                            data.add(rs.getObject(i));
+                    //修复由于并发情况下rs未关闭时再次执行executeQuery方法，导致的Oracle数据库抛出“结果集已耗尽”的异常，目前采用加锁方式解决
+                    if(LockUtils.tryLock()){
+                        rs = statement.executeQuery(String.format(QUERY_ROW_DATA_SQL, tableName, rowId));
+                        final int size = rs.getMetaData().getColumnCount();
+                        while (rs.next()) {
+                            for (int i = 1; i <= size; i++) {
+                                data.add(rs.getObject(i));
+                            }
                         }
                     }
                 } catch (SQLException e) {
                     logger.error(e.getMessage());
                 } finally {
                     close(rs);
+                    rs = null;
+                    //解锁操作
+                    LockUtils.unlock();
                 }
             }
 
