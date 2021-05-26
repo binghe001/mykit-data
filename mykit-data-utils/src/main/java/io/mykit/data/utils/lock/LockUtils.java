@@ -38,7 +38,7 @@ public class LockUtils {
      */
     public static boolean tryLock() {
         try {
-            return LOCK.tryLock(3, TimeUnit.SECONDS);
+            return LOCK.tryLock(15, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             LOGGER.error("加锁异常:{}", e);
             return false;

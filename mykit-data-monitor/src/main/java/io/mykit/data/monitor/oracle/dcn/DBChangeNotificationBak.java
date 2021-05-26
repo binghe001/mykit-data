@@ -23,7 +23,7 @@ import java.util.*;
  * <p>
  * <p>grant change notification to AE86
  */
-public class DBChangeNotification {
+public class DBChangeNotificationBak {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -42,10 +42,7 @@ public class DBChangeNotification {
     private Map<Integer, String> tables;
     private List<RowEventListener> listeners;
 
-    //执行Task的线程，消费queue队列的数据
-    private Thread worker;
-
-    public DBChangeNotification(String username, String password, String url) {
+    public DBChangeNotificationBak(String username, String password, String url) {
         this.username = username;
         this.password = password;
         this.url = url;
@@ -77,12 +74,6 @@ public class DBChangeNotification {
             clean(statement, regId, callback);
             statement.setDatabaseChangeRegistration(dcr);
 
-            //设置消费信息的信息并启动
-            this.worker = new Thread(new Task());
-            worker.setName(new StringBuilder("dcn-parser-").append(host).append(":").append(port).append("_").append(regId).toString());
-            worker.setDaemon(false);
-            worker.start();
-
             // 配置监听表
             for (Map.Entry<Integer, String> m : tables.entrySet()) {
                 statement.executeQuery(String.format(QUERY_TABLE_SQL, m.getValue()));
@@ -96,12 +87,6 @@ public class DBChangeNotification {
     }
 
     public void close() {
-
-        if(null != worker && !worker.isInterrupted()){
-            worker.interrupt();
-            worker = null;
-        }
-
         try {
             if (null != statement) {
                 statement.close();
@@ -217,34 +202,7 @@ public class DBChangeNotification {
                 RowChangeDescription[] rds = td.getRowChangeDescription();
                 for (RowChangeDescription rd : rds) {
                     RowChangeDescription.RowOperation opr = rd.getRowOperation();
-                    //parseEvent(tables.get(td.getObjectNumber()), rd.getRowid().stringValue(), opr);
-                    try {
-                        BlockingQueueFactory.getInstance().put(new DCNEvent(tables.get(td.getObjectNumber()), rd.getRowid().stringValue(), opr));
-                        //logger.info("向队列中添加数据，当前队列长度为:{}", BlockingQueueFactory.getInstance().size());
-                    } catch (InterruptedException e) {
-                        logger.error("Table[{}], RowId:{}, Code:{}, Error:{}", tables.get(td.getObjectNumber()), rd.getRowid().stringValue(), rd.getRowOperation().getCode(), e.getMessage());
-                    }
-                }
-            }
-        }
-    }
-
-    final class Task implements Runnable{
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    // 取走BlockingQueue里排在首位的对象,若BlockingQueue为空,阻断进入等待状态直到Blocking有新的对象被加入为止
-                    DCNEvent event = BlockingQueueFactory.getInstance().take();
-                    //logger.info("从队列中消费数据，当前队列长度为:{}", BlockingQueueFactory.getInstance().size());
-                    //取出的对象不为空
-                    if(null != event){
-                        parseEvent(event.getTableName(), event.getRowId(), event.getEvent());
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("程序异常:{}", e);
-                    break;
+                    parseEvent(tables.get(td.getObjectNumber()), rd.getRowid().stringValue(), opr);
                 }
             }
         }
@@ -252,31 +210,32 @@ public class DBChangeNotification {
         private void parseEvent(String tableName, String rowId, RowChangeDescription.RowOperation event) {
             List<Object> data = new ArrayList<>();
             data.add(rowId);
+
             if (event.getCode() != TableChangeDescription.TableOperation.DELETE.getCode()) {
                 ResultSet rs = null;
                 try {
-                    if(LockUtils.tryLock()) {
-                        //logger.info("执行的SQL语句为: {}",String.format(QUERY_ROW_DATA_SQL, tableName, rowId));
+                    //修复由于并发情况下rs未关闭时再次执行executeQuery方法，导致的Oracle数据库抛出“结果集已耗尽”的异常，目前采用加锁方式解决
+                    if(LockUtils.tryLock()){
                         rs = statement.executeQuery(String.format(QUERY_ROW_DATA_SQL, tableName, rowId));
-                        if(rs != null) {
-                            final int size = rs.getMetaData().getColumnCount();
-                            //logger.error("获取到的数据表：{}, 中的数据列数量：{}", tableName, size);
-                            while (rs.next()) {
-                                for (int i = 1; i <= size; i++) {
-                                    data.add(rs.getObject(i));
-                                }
+                        final int size = rs.getMetaData().getColumnCount();
+                        while (rs.next()) {
+                            for (int i = 1; i <= size; i++) {
+                                data.add(rs.getObject(i));
                             }
                         }
                     }
                 } catch (SQLException e) {
-                    logger.error("异常:{}", e);
+                    logger.error(e.getMessage());
                 } finally {
                     close(rs);
                     rs = null;
+                    //解锁操作
                     LockUtils.unlock();
                 }
             }
+
             listeners.forEach(e -> e.onEvents(new RowChangeEvent(tableName, event.getCode(), data)));
         }
     }
+
 }
