@@ -17,6 +17,7 @@
         <module>mykit-data-business</module>
         <module>mykit-data-starter</module>
         <module>mykit-data-utils</module>
+        <module>mykit-data-spi</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
