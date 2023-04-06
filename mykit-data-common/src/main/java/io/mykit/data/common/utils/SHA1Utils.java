@@ -48,6 +48,6 @@ public class SHA1Utils {
             return null;
         }
         // base64加密
-        return new sun.misc.BASE64Encoder().encode(sha1);
+        return java.util.Base64.getEncoder().encodeToString(sha1);
     }
 }
